@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" th:attr="data-lang=${session.lang}">
+<head>
+    <meta charset="UTF-8">
+    <title>Thông tin nhân viên</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/app.css?v=20260531">
+
+    <style>
+
+        .avatar-upload-wrapper{
+            position:relative;
+            width:120px;
+            margin:auto;
+        }
+
+        .avatar-lg{
+            width:120px;
+            height:120px;
+            border-radius:50%;
+            object-fit:cover;
+            border:4px solid #0f3d91;
+            box-shadow:0 10px 25px rgba(15,61,145,.18);
+        }
+
+        .avatar-edit-btn{
+            position:absolute;
+            bottom:4px;
+            right:4px;
+            width:36px;
+            height:36px;
+            border-radius:50%;
+            background:#0f3d91;
+            color:white;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            cursor:pointer;
+            font-size:16px;
+            box-shadow:0 5px 12px rgba(0,0,0,.18);
+            transition:.2s;
+        }
+
+        .avatar-edit-btn:hover{
+            transform:scale(1.08);
+            background:#082b6b;
+        }
+
+    </style>
+
+</head>
+
+<body style="background:#edf4ff;">
+<div class="global-lang-switch">
+    <a href="/change-language?lang=vi" class="global-lang-btn" th:classappend="${session.lang != 'en'} ? 'active' : ''">VI</a>
+    <a href="/change-language?lang=en" class="global-lang-btn" th:classappend="${session.lang == 'en'} ? 'active' : ''">EN</a>
+</div>
+
+
+<nav class="navbar nav-red px-4">
+
+    <a class="navbar-brand d-flex align-items-center gap-2 fw-bold text-dark"
+       href="/nhan-vien-dashboard">
+
+        <span class="logo-pill">🧑‍💼</span>
+        Nhân viên bán vé
+
+    </a>
+
+    <a href="/logout"
+       class="btn btn-outline-danger rounded-pill">
+        Đăng xuất
+    </a>
+
+</nav>
+
+<div class="container py-5">
+
+    <div class="form-card p-5">
+
+        <h2 class="fw-bold mb-1">
+            Thông tin nhân viên
+        </h2>
+
+        <p class="text-muted">
+            Cập nhật họ tên, số điện thoại và avatar.
+        </p>
+
+        <div class="alert alert-success rounded-4"
+             th:if="${param.success}">
+            Cập nhật thông tin thành công.
+        </div>
+
+        <div class="alert alert-danger rounded-4"
+             th:if="${error}" th:text="${error}">
+        </div>
+
+        <form method="post"
+              action="/nhan-vien-thong-tin"
+              enctype="multipart/form-data">
+
+            <div class="row">
+
+                <div class="col-md-3 text-center">
+
+                    <div class="avatar-upload-wrapper">
+
+                        <img class="avatar-lg"
+                             th:src="${avatarHienThi}"
+                             id="avatarPreview">
+
+                        <label for="avatarInput"
+                               class="avatar-edit-btn">
+                            ✏️
+                        </label>
+
+                        <input type="file"
+                               id="avatarInput"
+                               name="avatarFile"
+                               accept="image/*"
+                               hidden>
+
+                    </div>
+
+                    <p class="text-muted small mt-3">
+                        Nhấn biểu tượng bút để đổi ảnh
+                    </p>
+
+                </div>
+
+                <div class="col-md-9">
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            Họ tên
+                        </label>
+
+                        <input class="form-control form-control-lg rounded-3"
+                               name="hoTen"
+                               th:value="${nhanVien['HoTen']}"
+                               required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            Số điện thoại
+                        </label>
+
+                        <input class="form-control form-control-lg rounded-3"
+                               name="soDienThoai"
+                               th:value="${nhanVien['SoDienThoai']}"
+                               pattern="^(03|05|07|08|09)\d{8}$"
+                               maxlength="10"
+                               title="Số điện thoại phải gồm 10 chữ số và bắt đầu bằng 03, 05, 07, 08 hoặc 09"
+                               required>
+                    </div>
+
+                    <button class="btn btn-brand btn-lg rounded-pill px-5">
+                        Lưu thông tin
+                    </button>
+
+                    <a href="/nhan-vien-dashboard"
+                       class="btn btn-outline-secondary btn-lg rounded-pill">
+                        Quay lại
+                    </a>
+
+                </div>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+<script>
+
+    const avatarInput = document.getElementById('avatarInput');
+    const avatarPreview = document.getElementById('avatarPreview');
+
+    avatarInput.addEventListener('change', function(e){
+
+        const file = e.target.files[0];
+
+        if(file){
+            avatarPreview.src = URL.createObjectURL(file);
+        }
+
+    });
+
+</script>
+
+
+<script th:inline="javascript">
+    window.APP_LANG = /*[[${session.lang}]]*/ 'vi';
+</script>
+<script src="/js/i18n.js?v=20260608"></script>
+</body>
+</html>

@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" th:attr="data-lang=${session.lang}">
+<head>
+    <meta charset="UTF-8">
+    <title>Ví/Thẻ</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/app.css?v=20260531">
+
+    <style>
+        .profile-layout{
+            display:grid;
+            grid-template-columns:270px 1fr;
+            gap:30px;
+            min-height:100vh;
+            padding:24px;
+            background:#edf4ff;
+        }
+
+        .profile-sidebar,
+        .profile-card{
+            background:white;
+            border-radius:26px;
+            padding:24px;
+            box-shadow:0 10px 30px rgba(15,23,42,.08);
+        }
+
+        .profile-avatar{
+            width:62px;
+            height:62px;
+            border-radius:50%;
+            object-fit:cover;
+            border:3px solid #0f3d91;
+        }
+
+        .wallet-badge{
+            background:#bfdbfe;
+            color:#082b6b;
+            padding:2px 8px;
+            border-radius:4px;
+            font-size:13px;
+        }
+
+        .profile-menu a{
+            display:flex;
+            align-items:center;
+            gap:12px;
+            padding:16px;
+            border-bottom:1px solid #e5e7eb;
+            color:#4b5563;
+            text-decoration:none;
+            font-weight:600;
+        }
+
+        .profile-menu a.active,
+        .profile-menu a:hover{
+            background:#dbeafe;
+            border-radius:14px;
+            color:#082b6b;
+        }
+
+        .method-card{
+            border:1px solid #dbeafe;
+            border-radius:18px;
+            padding:18px;
+            background:#f8fbff;
+            height:100%;
+        }
+
+        .bank-hint{
+            font-size:13px;
+            color:#6b7280;
+        }
+    </style>
+</head>
+
+<body>
+<div class="global-lang-switch">
+    <a href="/change-language?lang=vi" class="global-lang-btn" th:classappend="${session.lang != 'en'} ? 'active' : ''">VI</a>
+    <a href="/change-language?lang=en" class="global-lang-btn" th:classappend="${session.lang == 'en'} ? 'active' : ''">EN</a>
+</div>
+
+
+<div class="profile-layout">
+
+    <aside class="profile-sidebar">
+        <div class="d-flex align-items-center gap-3 mb-4">
+            <img class="profile-avatar" th:src="${avatarHienThi}">
+            <div>
+                <h5 class="fw-bold mb-1" th:text="${hoTenHienThi}"></h5>
+                <span class="wallet-badge">Wallet Not Verified</span>
+            </div>
+        </div>
+
+        <div class="profile-menu">
+            <a href="/uu-dai-cua-toi">🎟️ Ưu đãi của tôi</a>
+            <a href="/lich-su-ve">🏷️ Chuyến đi của tôi</a>
+            <a class="active" href="/vi-the">💳 Ví/Thẻ</a>
+            <a href="/trang-ca-nhan">⚙️ Thông tin của tôi</a>
+            <a href="/mua-ve">🚌 Mua vé</a>
+        </div>
+    </aside>
+
+    <main>
+        <h3 class="mb-4">Ví/Thẻ</h3>
+
+        <div class="alert alert-warning rounded-4" th:if="${param.needLink}">
+            Bạn chưa liên kết phương thức thanh toán.
+        </div>
+
+        <div class="alert alert-success rounded-4" th:if="${param.linked}">
+            Liên kết phương thức thanh toán thành công.
+        </div>
+
+        <div class="alert alert-danger rounded-4" th:if="${error}" th:text="${error}"></div>
+
+        <div class="profile-card mb-4">
+            <h5 class="fw-bold">Phương thức thanh toán đã liên kết</h5>
+
+            <div class="alert alert-warning rounded-4 mt-3" th:if="${#lists.isEmpty(methods)}">
+                Chưa có phương thức thanh toán. Vui lòng liên kết phương thức muốn thanh toán.
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3" th:each="m : ${methods}">
+                    <div class="method-card">
+                        <h5 class="fw-bold" th:text="${m['LoaiPhuongThuc']}"></h5>
+
+                        <p class="mb-1" th:if="${m['NganHang'] != null and m['NganHang'] != ''}">
+                            Ngân hàng:
+                            <b th:text="${m['NganHang']}"></b>
+                        </p>
+
+                        <p class="mb-1">
+                            Chủ tài khoản:
+                            <b th:text="${m['TenChuTaiKhoan']}"></b>
+                        </p>
+
+                        <p class="mb-1">
+                            Số tài khoản/thẻ:
+                            <b th:text="${m['SoTaiKhoan']}"></b>
+                        </p>
+
+                        <span class="badge bg-success" th:text="${m['TrangThai']}"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="profile-card">
+            <h5 class="fw-bold">Liên kết phương thức thanh toán</h5>
+
+            <form method="post" action="/vi-the/lien-ket" class="row mt-3">
+
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Loại phương thức</label>
+                    <select class="form-select form-select-lg rounded-3"
+                            name="loaiPhuongThuc"
+                            id="loaiPhuongThuc"
+                            required>
+                        <option value="Liên kết ngân hàng">Liên kết ngân hàng</option>
+                        <option value="Thẻ liên kết">Thẻ liên kết</option>
+                    </select>
+                </div>
+
+                <div class="col-md-4 mb-3" id="bankBox">
+                    <label class="form-label">Ngân hàng</label>
+
+                    <input class="form-control form-control-lg rounded-3"
+                           name="nganHang"
+                           id="nganHang"
+                           list="bankList"
+                           placeholder="Nhập chữ cái hoặc tên ngân hàng">
+
+                    <datalist id="bankList">
+                        <option value="Vietcombank"></option>
+                        <option value="BIDV"></option>
+                        <option value="VietinBank"></option>
+                        <option value="Agribank"></option>
+                        <option value="Techcombank"></option>
+                        <option value="MB Bank"></option>
+                        <option value="ACB"></option>
+                        <option value="Sacombank"></option>
+                        <option value="VPBank"></option>
+                        <option value="TPBank"></option>
+                        <option value="HDBank"></option>
+                        <option value="VIB"></option>
+                        <option value="SHB"></option>
+                        <option value="MSB"></option>
+                        <option value="OCB"></option>
+                        <option value="SeABank"></option>
+                        <option value="Eximbank"></option>
+                        <option value="Nam A Bank"></option>
+                        <option value="PVcomBank"></option>
+                        <option value="LienVietPostBank"></option>
+                    </datalist>
+
+                    <small class="bank-hint">
+                        Nhập chữ cái đầu, hệ thống sẽ gợi ý ngân hàng.
+                    </small>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Tên chủ tài khoản</label>
+                    <input class="form-control form-control-lg rounded-3"
+                           name="tenChuTaiKhoan"
+                           required>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Số tài khoản / số thẻ</label>
+                    <input class="form-control form-control-lg rounded-3"
+                           name="soTaiKhoan"
+                           id="soTaiKhoan"
+                           inputmode="numeric"
+                           required>
+                    <small class="text-muted" id="cardHint">
+                        Nếu chọn thẻ liên kết, bắt buộc nhập đúng 16 số.
+                    </small>
+                </div>
+
+                <div class="col-12">
+                    <button class="btn btn-brand btn-lg rounded-pill px-5">
+                        Liên kết
+                    </button>
+                </div>
+            </form>
+        </div>
+    </main>
+</div>
+
+<script>
+    const loaiPhuongThuc = document.getElementById("loaiPhuongThuc");
+    const soTaiKhoan = document.getElementById("soTaiKhoan");
+    const nganHang = document.getElementById("nganHang");
+    const bankBox = document.getElementById("bankBox");
+    const cardHint = document.getElementById("cardHint");
+
+    function updatePaymentForm(){
+        if(loaiPhuongThuc.value === "Thẻ liên kết"){
+            nganHang.required = false;
+            bankBox.style.display = "none";
+
+            soTaiKhoan.setAttribute("maxlength", "16");
+            soTaiKhoan.setAttribute("pattern", "[0-9]{16}");
+            if (window.APP_LANG === "en") {
+                soTaiKhoan.placeholder = "Enter exactly 16 card digits";
+                cardHint.innerText = "After linking, the first 12 digits will be hidden automatically.";
+            } else {
+                soTaiKhoan.placeholder = "Nhập đúng 16 số thẻ";
+                cardHint.innerText = "Sau khi liên kết, 12 số đầu sẽ tự động được ẩn.";
+            }
+        }else{
+            nganHang.required = true;
+            bankBox.style.display = "block";
+
+            soTaiKhoan.removeAttribute("maxlength");
+            soTaiKhoan.removeAttribute("pattern");
+            if (window.APP_LANG === "en") {
+                soTaiKhoan.placeholder = "Enter bank account number";
+                cardHint.innerText = "Enter your bank account number.";
+            } else {
+                soTaiKhoan.placeholder = "Nhập số tài khoản ngân hàng";
+                cardHint.innerText = "Nhập số tài khoản ngân hàng của bạn.";
+            }
+        }
+    }
+
+    loaiPhuongThuc.addEventListener("change", updatePaymentForm);
+    updatePaymentForm();
+</script>
+
+
+<script th:inline="javascript">
+    window.APP_LANG = /*[[${session.lang}]]*/ 'vi';
+</script>
+<script src="/js/i18n.js?v=20260608"></script>
+</body>
+</html>

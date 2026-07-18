@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" th:attr="data-lang=${session.lang}">
+
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${table.title}"></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/app.css?v=20260531">
+</head>
+
+<body>
+<div class="global-lang-switch">
+    <a href="/change-language?lang=vi" class="global-lang-btn" th:classappend="${session.lang != 'en'} ? 'active' : ''">VI</a>
+    <a href="/change-language?lang=en" class="global-lang-btn" th:classappend="${session.lang == 'en'} ? 'active' : ''">EN</a>
+</div>
+
+
+<div class="container py-5">
+    <div class="form-card p-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="fw-bold mb-1" th:text="${table.title}"></h2>
+                <p class="text-muted mb-0">Nhập thông tin dữ liệu</p>
+            </div>
+            <a class="btn btn-outline-secondary rounded-pill" th:href="@{'/' + ${table.route}}">
+                Quay lại
+            </a>
+        </div>
+
+        <form method="post" th:action="@{'/' + ${table.route} + '/luu'}">
+            <div class="row">
+                <div class="col-md-6 mb-3" th:each="col : ${table.columns}">
+                    <label class="form-label fw-semibold" th:text="${columnLabels.get(col)}"></label>
+
+                    <input type="text"
+                           class="form-control form-control-lg rounded-3"
+                           th:name="${col}"
+                           th:value="${item.get(col)}"
+                           th:readonly="${item.get(col) != null and col == table.idColumn}"
+                           th:pattern="${col == 'SoDienThoai'} ? '^(03|05|07|08|09)[0-9]{8}$' : null"
+                           th:title="${col == 'SoDienThoai'} ? 'Số điện thoại phải gồm 10 chữ số và bắt đầu bằng 03, 05, 07, 08 hoặc 09.' : null"
+                           th:maxlength="${col == 'SoDienThoai'} ? '10' : null">
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <button class="btn btn-brand btn-lg px-5 rounded-pill">Lưu dữ liệu</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<script th:inline="javascript">
+    window.APP_LANG = /*[[${session.lang}]]*/ 'vi';
+</script>
+<script src="/js/i18n.js?v=20260608"></script>
+</body>
+</html>

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" th:attr="data-lang=${session.lang}">
+
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${table != null and table.title != null ? table.title : 'Danh sách'}">Danh sách</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/app.css?v=20260531">
+</head>
+
+<body>
+<div class="global-lang-switch">
+    <a href="/change-language?lang=vi" class="global-lang-btn" th:classappend="${session.lang != 'en'} ? 'active' : ''">VI</a>
+    <a href="/change-language?lang=en" class="global-lang-btn" th:classappend="${session.lang == 'en'} ? 'active' : ''">EN</a>
+</div>
+
+
+<div class="admin-shell">
+    <aside class="admin-sidebar">
+        <div class="d-flex align-items-center gap-3 mb-4">
+            <span class="logo-pill">🚌</span>
+            <div>
+                <h5 class="fw-bold mb-0">Admin Panel</h5>
+                <small class="text-white-50">Quản Lý Dữ Liệu</small>
+            </div>
+        </div>
+
+        <a href="/">▸ Trang Chủ</a>
+        <a href="/logout" class="bg-danger text-white">Đăng Xuất</a>
+    </aside>
+
+    <main class="admin-content">
+        <div th:if="${table == null}" class="alert alert-danger rounded-4">
+            Không tìm thấy cấu hình bảng dữ liệu. Vui lòng kiểm tra Controller đã truyền
+            <b>model.addAttribute("table", ...)</b> hay chưa.
+        </div>
+
+        <div th:if="${table != null}">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="fw-bold mb-1" th:text="${table.title != null ? table.title : 'Danh sách'}"></h2>
+                    <p class="text-muted mb-0">Admin: <b th:text="${username != null ? username : 'Admin'}"></b></p>
+                </div>
+
+                <a class="btn btn-brand rounded-pill px-4"
+                   th:if="${table.route != null}"
+                   th:href="@{'/' + ${table.route} + '/them'}">
+                    + Thêm mới
+                </a>
+            </div>
+
+            <div th:if="${success != null}" class="alert alert-success rounded-4" th:text="${success}"></div>
+            <div th:if="${error != null}" class="alert alert-danger rounded-4" th:text="${error}"></div>
+
+            <div class="table-wrap p-3">
+                <div class="admin-table-search-box">
+                    <input type="text" class="admin-table-search-input"
+                           data-table-search
+                           placeholder="Nhập dữ liệu cần tìm...">
+                    <button type="button" class="admin-table-search-button" data-table-search-button>Tìm</button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                        <tr>
+                            <th th:each="col : ${table.columns}" th:text="${columnLabels.get(col)}"></th>
+                            <th width="180">Thao Tác</th>
+                        </tr>
+                        </thead>
+
+                        <tbody>
+                        <tr th:each="item : ${items}">
+                            <td th:each="col : ${table.columns}" th:text="${item.get(col)}"></td>
+                            <td>
+                                <a class="btn btn-warning btn-sm rounded-pill"
+                                   th:if="${table.route != null and table.idColumn != null}"
+                                   th:href="@{'/' + ${table.route} + '/sua/' + ${item.get('__id')}}">
+                                    Sửa
+                                </a>
+
+                                <a class="btn btn-danger btn-sm rounded-pill"
+                                   th:if="${table.route != null and table.idColumn != null}"
+                                   th:href="@{'/' + ${table.route} + '/xoa/' + ${item.get('__id')}}"
+                                   onclick="return confirm('Bạn có chắc muốn xóa?')">
+                                    Xóa
+                                </a>
+                            </td>
+                        </tr>
+
+                        <tr th:if="${items == null or #lists.isEmpty(items)}">
+                            <td th:colspan="${table.columns != null ? table.columns.size() + 1 : 1}" class="text-center text-muted py-5">
+                                Chưa có dữ liệu
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+
+<script th:inline="javascript">
+    window.APP_LANG = /*[[${session.lang}]]*/ 'vi';
+</script>
+<script src="/js/i18n.js?v=20260608"></script>
+</body>
+</html>

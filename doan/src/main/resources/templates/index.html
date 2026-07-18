@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" th:attr="data-lang=${session.lang}">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin - Quản lý vé xe</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/app.css?v=20260531">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+<div class="global-lang-switch">
+    <a href="/change-language?lang=vi" class="global-lang-btn" th:classappend="${session.lang != 'en'} ? 'active' : ''">VI</a>
+    <a href="/change-language?lang=en" class="global-lang-btn" th:classappend="${session.lang == 'en'} ? 'active' : ''">EN</a>
+</div>
+
+
+<div class="admin-shell" id="adminShell">
+
+    <aside class="admin-sidebar">
+
+        <button type="button" class="sidebar-toggle" onclick="toggleSidebar()" title="Thu gọn/Mở rộng">
+            ❮
+        </button>
+
+        <div class="d-flex align-items-center gap-3 mb-4 admin-brand">
+            <span class="logo-pill">🚌</span>
+
+            <div class="sidebar-text">
+                <h5 class="fw-bold mb-0">Admin Panel</h5>
+                <small class="text-white-50">Quản Lý Bán Vé Xe</small>
+            </div>
+        </div>
+
+        <button class="sidebar-collapse-btn" onclick="toggleMenu('menu-vanhanh', this)">
+            <span>Vận Hành</span>
+            <b>⌄</b>
+        </button>
+        <div id="menu-vanhanh" class="sidebar-submenu">
+            <a href="/ben-xe">▸ Bến Xe</a>
+            <a href="/tuyen-xe">▸ Tuyến Xe</a>
+            <a href="/xe-khach">▸ Xe Khách</a>
+            <a href="/tai-xe">▸ Tài Xế</a>
+            <a href="/ghe">▸ Ghế</a>
+            <a href="/lich-chay">▸ Lịch Chạy</a>
+        </div>
+
+        <button class="sidebar-collapse-btn" onclick="toggleMenu('menu-banve', this)">
+            <span>Bán Vé</span>
+            <b>⌄</b>
+        </button>
+        <div id="menu-banve" class="sidebar-submenu">
+            <a href="/loai-ve">▸ Loại Vé</a>
+            <a href="/dat-ve">▸ Đặt Vé</a>
+            <a href="/chi-tiet-ghe-dat">▸ Chi Tiết Ghế Đặt</a>
+            <a href="/thanh-toan">▸ Thanh Toán</a>
+            <a href="/huy-ve">▸ Vé Đã Hủy</a>
+            <a href="/sua-ve">▸ Sửa Vé</a>
+        </div>
+
+        <button class="sidebar-collapse-btn" onclick="toggleMenu('menu-nguoidung', this)">
+            <span>Người Dùng</span>
+            <b>⌄</b>
+        </button>
+        <div id="menu-nguoidung" class="sidebar-submenu">
+            <a href="/khach-hang">▸ Khách Hàng</a>
+            <a href="/hanh-khach-phu">▸ Hành Khách Phụ</a>
+            <a href="/nhan-vien">▸ Nhân Viên</a>
+            <a href="/tai-khoan">▸ Tài Khoản</a>
+        </div>
+
+        <button class="sidebar-collapse-btn" onclick="toggleMenu('menu-baocao', this)">
+            <span>Báo Cáo</span>
+            <b>⌄</b>
+        </button>
+        <div id="menu-baocao" class="sidebar-submenu">
+            <a href="/khuyen-mai">▸ Khuyến Mãi</a>
+            <a href="/bao-cao-doanh-thu">▸ Báo Cáo Doanh Thu</a>
+            <a href="/yeu-cau-huy-ve">▸ Yêu Cầu Hủy Vé</a>
+            <a href="/admin/backup-restore">▸ Backup/Restore</a>
+        </div>
+
+        <hr class="border-secondary">
+
+        <a href="/logout" class="sidebar-logout">
+            ⏻ Đăng Xuất
+        </a>
+
+    </aside>
+
+    <main class="admin-content">
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="fw-bold mb-1">Tổng quan quản trị</h2>
+                <p class="text-muted mb-0">
+                    Xin chào <b th:text="${username}"></b>
+                </p>
+            </div>
+
+            <a href="/mua-ve" class="btn btn-brand rounded-pill px-4">
+                Xem trang mua vé
+            </a>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-3 mb-3">
+                <div class="stat-card p-4">
+                    <small class="text-muted" th:text="${session.lang == 'en'} ? 'Total Revenue' : 'Tổng doanh thu'"></small>
+                    <h4 class="fw-bold text-primary mb-0 mt-1">
+                        <span th:text="${#numbers.formatDecimal(tongDoanhThu, 0, 'POINT', 0, 'COMMA')} + ' đ'"></span>
+                    </h4>
+                </div>
+            </div>
+
+            <div class="col-md-3 mb-3">
+                <div class="stat-card p-4">
+                    <small class="text-muted" th:text="${session.lang == 'en'} ? 'Total Bookings' : 'Tổng đặt vé'"></small>
+                    <h4 class="fw-bold text-success mb-0 mt-1" th:text="${tongDatVe}"></h4>
+                </div>
+            </div>
+
+            <div class="col-md-3 mb-3">
+                <div class="stat-card p-4">
+                    <small class="text-muted" th:text="${session.lang == 'en'} ? 'Total Customers' : 'Tổng khách hàng'"></small>
+                    <h4 class="fw-bold text-info mb-0 mt-1" th:text="${tongKhachHang}"></h4>
+                </div>
+            </div>
+
+            <div class="col-md-3 mb-3">
+                <div class="stat-card p-4">
+                    <small class="text-muted" th:text="${session.lang == 'en'} ? 'Total Buses' : 'Tổng số xe'"></small>
+                    <h4 class="fw-bold text-warning mb-0 mt-1" th:text="${tongXe}"></h4>
+                </div>
+            </div>
+        </div>
+
+        <!-- OVERVIEW LINE CHART -->
+        <div class="stat-card p-4 mb-4">
+            <h4 class="fw-bold mb-3" th:text="${session.lang == 'en'} ? 'Overall Statistics (Line Chart)' : 'Tổng quan thống kê (Biểu đồ đường)'"></h4>
+            <div style="position: relative; height: 320px; width: 100%;">
+                <canvas id="overviewChart"></canvas>
+            </div>
+        </div>
+
+        <div class="quick-action mb-4">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h3 class="fw-bold mb-2">Duyệt yêu cầu hủy vé</h3>
+                    <p class="mb-0">Xem lý do hủy từ khách hàng, duyệt hoặc từ chối yêu cầu.</p>
+                </div>
+
+                <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                    <a href="/yeu-cau-huy-ve" class="btn btn-light rounded-pill px-4">
+                        Xem yêu cầu
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <h4 class="admin-section-title">Nhóm chức năng quản trị</h4>
+
+        <div class="admin-group-grid mb-4">
+
+            <button class="group-card active" onclick="showGroup('vanhanh', this)">
+                <div class="group-icon">🚌</div>
+                <b>Vận hành</b>
+                <small>Bến xe, tuyến xe, xe, tài xế</small>
+            </button>
+
+            <button class="group-card" onclick="showGroup('banve', this)">
+                <div class="group-icon">🎫</div>
+                <b>Bán vé</b>
+                <small>Đặt vé, ghế, thanh toán</small>
+            </button>
+
+            <button class="group-card" onclick="showGroup('nguoidung', this)">
+                <div class="group-icon">👥</div>
+                <b>Người dùng</b>
+                <small>Khách hàng, nhân viên, tài khoản</small>
+            </button>
+
+            <button class="group-card" onclick="showGroup('baocao', this)">
+                <div class="group-icon">📊</div>
+                <b>Báo cáo</b>
+                <small>Doanh thu, khuyến mãi, yêu cầu, backup</small>
+            </button>
+
+        </div>
+
+        <div id="vanhanh" class="function-group">
+            <h4 class="fw-bold mb-3">Quản lý vận hành xe</h4>
+
+            <div class="admin-module-grid">
+                <div class="card admin-module-card">
+                    <div class="card-body p-4">
+                        <div class="module-icon">🏢</div>
+                        <h5 class="fw-bold">Bến xe</h5>
+                        <p class="text-muted">Quản lý bến xe</p>
+                        <a href="/ben-xe" class="btn btn-brand rounded-pill">Truy cập</a>
+                    </div>
+                </div>
+
+                <div class="card admin-module-card">
+                    <div class="card-body p-4">
+                        <div class="module-icon">🛣️</div>
+                        <h5 class="fw-bold">Tuyến xe</h5>
+                        <p class="text-muted">Quản lý tuyến xe</p>
+                        <a href="/tuyen-xe" class="btn btn-brand rounded-pill">Truy cập</a>
+                    </div>
+                </div>
+
+                <div class="card admin-module-card">
+                    <div class="card-body p-4">
+                        <div class="module-icon">🚌</div>
+                        <h5 class="fw-bold">Xe khách</h5>
+                        <p class="text-muted">Quản lý xe khách</p>
+                        <a href="/xe-khach" class="btn btn-brand rounded-pill">Truy cập</a>
+                    </div>
+                </div>
+
+                <div class="card admin-module-card">
+                    <div class="card-body p-4">
+                        <div class="module-icon">👨‍✈️</div>
+                        <h5 class="fw-bold">Tài xế</h5>
+                        <p class="text-muted">Quản lý tài xế</p>
+                        <a href="/tai-xe" class="btn btn-brand rounded-pill">Truy cập</a>
+                    </div>
+                </div>
+
+                <div class="card admin-module-card">
+                    <div class="card-body p-4">
+                        <div class="module-icon">💺</div>
+                        <h5 class="fw-bold">Ghế</h5>
+                        <p class="text-muted">Quản lý ghế xe</p>
+                        <a href="/ghe" class="btn btn-brand rounded-pill">Truy cập</a>
+                    </div>
+                </div>
+
+                <div class="card admin-module-card">
+                    <div class="card-body p-4">
+                        <div class="module-icon">🕒</div>
+                        <h5 class="fw-bold">Lịch chạy</h5>
+                        <p class="text-muted">Quản lý lịch chạy</p>
+                        <a href="/lich-chay" class="btn btn-brand rounded-pill">Truy cập</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="banve" class="function-group d-none">
+            <h4 class="fw-bold mb-3">Quản lý bán vé</h4>
+
+            <div class="admin-module-grid">
+                <div class="card admin-module-card">
+                    <div class="card-body p-4">
+                        <div class="module-icon">🎫</div>
+                        <h5 class="fw-bold">Loại vé</h5>
+                        <p class="text-muted">Quản lý loại vé</p>
+                        <a href="/loai-ve" class="btn btn-brand rounded-pill">Truy cập</a>
+                    </div>
+                </div>
+
+                <div class="card admin-module-card">
+                    <div class="card-body p-4">
+                        <div class="module-icon">🧾</div>
+                        <h5 class="fw-bold">Đặt vé</h5>
+                        <p class="text-muted">Quản lý đặt vé</p>
+                        <a href="/dat-ve" class="btn btn-brand rounded-pill">Truy cập</a>
+                    </div>
+                </div>
+
+                <div class="card admin-module-card">
+                    <div class="card-body p-4">
+                        <div class="module-icon">💺</div>
+                        <h5 class="fw-bold">Chi tiết ghế đặt</h5>
+                        <p class="text-muted">Quản lý ghế đã đặt</p>
+                        <a href="/chi-tiet-ghe-dat" class="btn btn-brand rounded-pill">Truy cập</a>
+                    </div>
+                </div>
+
+                <div class="card admin-module-card">
+                    <div class="card-body p-4">
+                        <div class="module-icon">💳</div>
+                        <h5 class="fw-bold">Thanh toán</h5>
+                        <p class="text-muted">Quản lý thanh toán</p>
+                        <a href="/thanh-toan" class="btn btn-brand rounded-pill">Truy cập</a>
+                    </div>
+                </div>
+
+                <div class="card admin-module-card">
+                    <div class="card-body p-4">
+                        <div class="module-icon">📱</div>
+                        <h5 class="fw-bold">Cấu hình QR</h5>
+                        <p class="text-muted">Upload mã QR thanh toán</p>
+                        <a href="/admin/qr-thanh-toan" class="btn btn-brand rounded-pill">Truy cập</a>
+                    </div>
+                </div>
+
+                <div class="card admin-module-card">
+                    <div class="card-body p-4">
+                        <div class="module-icon">❌</div>
+                        <h5 class="fw-bold">Hủy vé</h5>
+                        <p class="text-muted">Quản lý vé đã hủy</p>
+                        <a href="/huy-ve" class="btn btn-brand rounded-pill">Truy cập</a>
+                    </div>
+                </div>
+
+                <div class="card admin-module-card">
+                    <div class="card-body p-4">
+                        <div class="module-icon">🔁</div>
+                        <h5 class="fw-bold">Sửa vé</h5>
+                        <p class="text-muted">Quản lý sửa vé</p>
+                        <a href="/sua-ve" class="btn btn-brand rounded-pill">Truy cập</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="nguoidung" class="function-group d-none">
+            <h4 class="fw-bold mb-3">Quản lý người dùng</h4>
+
+            <div class="admin-module-grid">
+                <div class="card admin-module-card">
+                    <div class="card-body p-4">
+                        <div class="module-icon">👤</div>
+                        <h5 class="fw-bold">Khách hàng</h5>
+                        <p class="text-muted">Quản lý khách hàng</p>
+                        <a href="/khach-hang" class="btn btn-brand rounded-pill">Truy cập</a>
+                    </div>
+                </div>
+
+                <div class="card admin-module-card">
+                    <div class="card-body p-4">
+                        <div class="module-icon">👨‍👩‍👧</div>
+                        <h5 class="fw-bold">Hành khách phụ</h5>
+                        <p class="text-muted">Quản lý hành khách phụ</p>
+                        <a href="/hanh-khach-phu" class="btn btn-brand rounded-pill">Truy cập</a>
+                    </div>
+                </div>
+
+                <div class="card admin-module-card">
+                    <div class="card-body p-4">
+                        <div class="module-icon">🧑‍💼</div>
+                        <h5 class="fw-bold">Nhân viên</h5>
+                        <p class="text-muted">Quản lý nhân viên</p>
+                        <a href="/nhan-vien" class="btn btn-brand rounded-pill">Truy cập</a>
+                    </div>
+                </div>
+
+                <div class="card admin-module-card">
+                    <div class="card-body p-4">
+                        <div class="module-icon">🔐</div>
+                        <h5 class="fw-bold">Tài khoản</h5>
+                        <p class="text-muted">Quản lý tài khoản</p>
+                        <a href="/tai-khoan" class="btn btn-brand rounded-pill">Truy cập</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="baocao" class="function-group d-none">
+            <h4 class="fw-bold mb-3">Báo cáo và xử lý</h4>
+
+            <div class="admin-module-grid">
+                <div class="card admin-module-card">
+                    <div class="card-body p-4">
+                        <div class="module-icon">🏷️</div>
+                        <h5 class="fw-bold">Khuyến mãi</h5>
+                        <p class="text-muted">Quản lý khuyến mãi</p>
+                        <a href="/khuyen-mai" class="btn btn-brand rounded-pill">Truy cập</a>
+                    </div>
+                </div>
+
+                <div class="card admin-module-card">
+                    <div class="card-body p-4">
+                        <div class="module-icon">📊</div>
+                        <h5 class="fw-bold">Doanh thu</h5>
+                        <p class="text-muted">Báo cáo doanh thu</p>
+                        <a href="/bao-cao-doanh-thu" class="btn btn-brand rounded-pill">Truy cập</a>
+                    </div>
+                </div>
+
+                <div class="card admin-module-card">
+                    <div class="card-body p-4">
+                        <div class="module-icon">⚠️</div>
+                        <h5 class="fw-bold">Yêu cầu hủy vé</h5>
+                        <p class="text-muted">Duyệt yêu cầu hủy vé</p>
+                        <a href="/yeu-cau-huy-ve" class="btn btn-brand rounded-pill">Truy cập</a>
+                    </div>
+                </div>
+
+                <div class="card admin-module-card">
+                    <div class="card-body p-4">
+                        <div class="module-icon">💾</div>
+                        <h5 class="fw-bold">Backup / Restore</h5>
+                        <p class="text-muted">Sao lưu và khôi phục dữ liệu</p>
+                        <a href="/admin/backup-restore" class="btn btn-brand rounded-pill">Truy cập</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+</div>
+
+<script>
+    function showGroup(groupId, button){
+        document.querySelectorAll('.function-group').forEach(function(group){
+            group.classList.add('d-none');
+        });
+
+        document.getElementById(groupId).classList.remove('d-none');
+
+        document.querySelectorAll('.group-card').forEach(function(btn){
+            btn.classList.remove('active');
+        });
+
+        button.classList.add('active');
+    }
+
+    function toggleSidebar(){
+        const shell = document.getElementById('adminShell');
+        const toggle = document.querySelector('.sidebar-toggle');
+
+        shell.classList.toggle('sidebar-collapsed');
+        toggle.innerHTML = shell.classList.contains('sidebar-collapsed') ? '❯' : '❮';
+    }
+
+    function toggleMenu(id, button){
+        const menu = document.getElementById(id);
+        const icon = button.querySelector('b');
+
+        menu.classList.toggle('d-none');
+        icon.innerHTML = menu.classList.contains('d-none') ? '›' : '⌄';
+    }
+</script>
+
+
+<script th:inline="javascript">
+    window.APP_LANG = /*[[${session.lang}]]*/ 'vi';
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const rawRevenue = /*[[${monthlyRevenue}]]*/ [];
+        const rawBookings = /*[[${monthlyBookings}]]*/ [];
+
+        const labels = window.APP_LANG === 'en'
+            ? ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+            : ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'];
+
+        const revenueData = Array(12).fill(0);
+        const bookingsData = Array(12).fill(0);
+
+        rawRevenue.forEach(item => {
+            const m = Number(item.Thang) - 1;
+            if (m >= 0 && m < 12) revenueData[m] = Number(item.DoanhThu);
+        });
+
+        rawBookings.forEach(item => {
+            const m = Number(item.Thang) - 1;
+            if (m >= 0 && m < 12) bookingsData[m] = Number(item.SoLuong);
+        });
+
+        function getCurrencySymbol(curr) {
+            if (curr === 'USD') return '$';
+            if (curr === 'EUR') return '€';
+            return 'đ';
+        }
+
+        function getCurrencyRate(curr) {
+            if (window.EXCHANGE_RATES && window.EXCHANGE_RATES[curr]) {
+                return window.EXCHANGE_RATES[curr];
+            }
+            if (curr === 'USD') return 0.00003937;
+            if (curr === 'EUR') return 0.00003636;
+            return 1.0;
+        }
+
+        const initialCurrency = localStorage.getItem('currency') || (window.APP_LANG === 'en' ? 'USD' : 'VND');
+        const initialRate = getCurrencyRate(initialCurrency);
+        const initialRevenueData = revenueData.map(val => val * initialRate);
+
+        const ctx = document.getElementById('overviewChart');
+        if (!ctx) return;
+
+        const myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: (window.APP_LANG === 'en' ? 'Monthly Revenue' : 'Doanh thu tháng') + ' (' + initialCurrency + ')',
+                        data: initialRevenueData,
+                        borderColor: '#2563eb',
+                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.35,
+                        yAxisID: 'yRevenue',
+                        fill: true
+                    },
+                    {
+                        label: window.APP_LANG === 'en' ? 'Monthly Bookings' : 'Số lượt đặt vé',
+                        data: bookingsData,
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        borderWidth: 3,
+                        tension: 0.35,
+                        yAxisID: 'yBookings',
+                        fill: false
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
+                scales: {
+                    yRevenue: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: {
+                            display: true,
+                            text: (window.APP_LANG === 'en' ? 'Revenue' : 'Doanh thu') + ' (' + getCurrencySymbol(initialCurrency) + ')',
+                            font: { weight: 'bold' }
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                if (localStorage.getItem('currency') === 'USD') {
+                                    return '$' + Number(value).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                                } else if (localStorage.getItem('currency') === 'EUR') {
+                                    return '€' + Number(value).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                                }
+                                return Number(value).toLocaleString('vi-VN') + ' đ';
+                            }
+                        }
+                    },
+                    yBookings: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        title: {
+                            display: true,
+                            text: window.APP_LANG === 'en' ? 'Bookings' : 'Lượt đặt vé',
+                            font: { weight: 'bold' }
+                        },
+                        grid: {
+                            drawOnChartArea: false
+                        },
+                        ticks: {
+                            precision: 0
+                        }
+                    }
+                }
+            }
+        });
+
+        window.addEventListener('currencychange', function(e) {
+            const curr = e.detail.currency;
+            const rate = getCurrencyRate(curr);
+            
+            // Recalculate based on original VND revenueData
+            const convertedRevenue = revenueData.map(val => val * rate);
+            myChart.data.datasets[0].data = convertedRevenue;
+            
+            const baseLabel = window.APP_LANG === 'en' ? 'Monthly Revenue' : 'Doanh thu tháng';
+            myChart.data.datasets[0].label = baseLabel + ' (' + curr + ')';
+            
+            const axisTitle = window.APP_LANG === 'en' ? 'Revenue' : 'Doanh thu';
+            myChart.options.scales.yRevenue.title.text = axisTitle + ' (' + getCurrencySymbol(curr) + ')';
+            
+            myChart.options.scales.yRevenue.ticks.callback = function(value) {
+                if (curr === 'USD') {
+                    return '$' + Number(value).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                } else if (curr === 'EUR') {
+                    return '€' + Number(value).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                }
+                return Number(value).toLocaleString('vi-VN') + ' đ';
+            };
+            
+            myChart.update();
+        });
+    });
+</script>
+<script src="/js/i18n.js?v=20260608"></script>
+</body>
+</html>

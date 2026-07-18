@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" th:attr="data-lang=${session.lang}">
+<head>
+    <meta charset="UTF-8">
+    <title>Lịch sử vé</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/app.css?v=20260531">
+</head>
+<body>
+<div class="global-lang-switch">
+    <a href="/change-language?lang=vi" class="global-lang-btn" th:classappend="${session.lang != 'en'} ? 'active' : ''">VI</a>
+    <a href="/change-language?lang=en" class="global-lang-btn" th:classappend="${session.lang == 'en'} ? 'active' : ''">EN</a>
+</div>
+
+
+<nav class="navbar nav-red px-4">
+    <a class="navbar-brand d-flex align-items-center gap-2 fw-bold text-dark" href="/mua-ve">
+        <span class="logo-pill">🚌</span>
+        Vé Xe Online
+    </a>
+    <div class="ms-auto">
+        <a href="/mua-ve" class="btn btn-outline-secondary rounded-pill">Mua vé</a>
+        <a href="/trang-ca-nhan" class="btn btn-outline-secondary rounded-pill">Trang cá nhân</a>
+        <a href="/logout" class="btn btn-outline-danger rounded-pill">Đăng xuất</a>
+    </div>
+</nav>
+
+<div class="container py-5">
+    <h2 class="fw-bold mb-1">Lịch sử vé đã đặt</h2>
+    <p class="text-muted">Bạn có thể gửi yêu cầu hủy vé và theo dõi trạng thái duyệt tại đây.</p>
+
+    <div class="alert alert-success rounded-4" th:if="${param.cancelRequested}">
+        Đã gửi yêu cầu hủy vé. Vui lòng chờ admin duyệt.
+    </div>
+
+    <div class="alert alert-warning rounded-4" th:if="${param.cancelExists}">
+        Vé này đã có yêu cầu hủy đang chờ duyệt.
+    </div>
+
+    <div class="alert alert-warning rounded-4" th:if="${#lists.isEmpty(ve)}">
+        Bạn chưa đặt vé nào.
+    </div>
+
+    <div class="card trip-card mb-3" th:each="v : ${ve}">
+        <div class="card-body p-4">
+            <div class="d-flex justify-content-between align-items-start gap-3">
+                <div>
+                    <span class="bus-badge">Mã vé: <span th:text="${v['MaDatVe']}"></span></span>
+
+                    <h5 class="fw-bold mt-3">
+                        <span th:text="${v['TenBenDi']}"></span>
+                        →
+                        <span th:text="${v['TenBenDen']}"></span>
+                    </h5>
+
+                    <p class="text-muted mb-1">
+                        Xe <span th:text="${v['HieuXe']}"></span> -
+                        <span th:text="${v['BienSo']}"></span>
+                    </p>
+
+                    <p class="mb-1">Ghế: <b th:text="${v['SoGhe']}"></b></p>
+                    <p class="mb-1">Khởi hành: <b th:text="${v['GioKhoiHanh']}"></b></p>
+                    <p class="mb-1">Tình trạng vé: <b th:text="${v['TrangThai']}"></b></p>
+
+                    <div class="alert alert-info rounded-4 mt-3 mb-0" th:if="${v['TrangThaiHuy'] != null}">
+                        <b>Yêu cầu hủy:</b> <span th:text="${v['TrangThaiHuy']}"></span><br>
+                        <b>Lý do của bạn:</b> <span th:text="${v['LyDoHuy']}"></span><br>
+                        <b>Phản hồi admin:</b>
+                        <span th:text="${v['PhanHoiAdmin'] != null ? v['PhanHoiAdmin'] : 'Chưa có phản hồi'}"></span>
+                    </div>
+                </div>
+
+                <div class="text-end">
+                    <div class="price" th:text="${#numbers.formatDecimal(v['TongTien'], 0, 'POINT', 0, 'COMMA')} + 'đ'"></div>
+
+                    <a class="btn btn-outline-danger rounded-pill mt-3"
+                       th:if="${v['TrangThai'] != 'Đã hủy' and v['TrangThai'] != 'Yêu cầu hủy'}"
+                       th:href="@{'/yeu-cau-huy-ve/' + ${v['MaDatVe']}}">
+                        Yêu cầu hủy
+                    </a>
+
+                    <span class="badge bg-secondary mt-3"
+                          th:if="${v['TrangThai'] == 'Yêu cầu hủy'}">
+                        Đang chờ duyệt
+                    </span>
+
+                    <span class="badge bg-danger mt-3"
+                          th:if="${v['TrangThai'] == 'Đã hủy'}">
+                        Đã hủy
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script th:inline="javascript">
+    window.APP_LANG = /*[[${session.lang}]]*/ 'vi';
+</script>
+<script src="/js/i18n.js?v=20260608"></script>
+</body>
+</html>

@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" th:attr="data-lang=${session.lang}">
+<head>
+    <meta charset="UTF-8">
+    <title>Báo cáo doanh thu</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/app.css?v=20260531">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+<div class="global-lang-switch">
+    <a href="/change-language?lang=vi" class="global-lang-btn" th:classappend="${session.lang != 'en'} ? 'active' : ''">VI</a>
+    <a href="/change-language?lang=en" class="global-lang-btn" th:classappend="${session.lang == 'en'} ? 'active' : ''">EN</a>
+</div>
+
+<div class="container py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold">Báo cáo doanh thu</h2>
+            <p class="text-muted mb-0">Danh sách doanh thu và biểu đồ thống kê</p>
+        </div>
+
+        <a href="/" class="btn btn-outline-secondary rounded-pill">
+            ← Quay lại Admin
+        </a>
+    </div>
+
+    <div class="stat-card p-4 mb-4">
+        <form method="get" action="/bao-cao-doanh-thu" class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label fw-semibold">Lọc theo tháng</label>
+                <select name="thang" class="form-select">
+                    <option value="">Tất cả tháng</option>
+                    <option th:each="i : ${#numbers.sequence(1,12)}"
+                            th:value="${i}"
+                            th:text="'Tháng ' + ${i}"
+                            th:selected="${thang == i}">
+                    </option>
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label fw-semibold">Lọc theo năm</label>
+                <input type="number"
+                       class="form-control"
+                       name="nam"
+                       th:value="${nam}"
+                       min="2020">
+            </div>
+
+            <div class="col-md-3">
+                <button class="btn btn-brand w-100">
+                    Lọc doanh thu
+                </button>
+            </div>
+
+            <div class="col-md-3">
+                <div class="p-3 rounded-4 bg-light">
+                    <small class="text-muted">Tổng doanh thu</small>
+                    <h4 class="fw-bold text-primary mb-0">
+                        <span th:text="${#numbers.formatDecimal(tongDoanhThu, 0, 'POINT', 0, 'COMMA')} + ' đ'"></span>
+                    </h4>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="table-wrap p-4 mb-4">
+        <h4 class="fw-bold mb-3">Danh sách doanh thu</h4>
+
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                <tr>
+                    <th>Mã thanh toán</th>
+                    <th>Mã vé</th>
+                    <th>Khách hàng</th>
+                    <th>Tuyến</th>
+                    <th>Số tiền</th>
+                    <th>Phương thức</th>
+                    <th>Ngày thanh toán</th>
+                </tr>
+                </thead>
+
+                <tbody>
+                <tr th:each="dt : ${danhSachDoanhThu}">
+                    <td th:text="${dt['MaThanhToan']}"></td>
+                    <td th:text="${dt['MaDatVe']}"></td>
+                    <td th:text="${dt['HoTen']}"></td>
+                    <td>
+                        <span th:text="${dt['TenBenDi']}"></span>
+                        →
+                        <span th:text="${dt['TenBenDen']}"></span>
+                    </td>
+                    <td class="fw-bold text-primary">
+                        <span th:text="${#numbers.formatDecimal(dt['SoTien'], 0, 'POINT', 0, 'COMMA')} + ' đ'"></span>
+                    </td>
+                    <td th:text="${dt['PhuongThuc']}"></td>
+                    <td th:text="${dt['NgayThanhToan']}"></td>
+                </tr>
+
+                <tr th:if="${#lists.isEmpty(danhSachDoanhThu)}">
+                    <td colspan="7" class="text-center text-muted py-4">
+                        Không có dữ liệu doanh thu.
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="stat-card p-4">
+        <h4 class="fw-bold mb-3">Biểu đồ doanh thu</h4>
+        <canvas id="revenueChart" height="100"></canvas>
+    </div>
+
+</div>
+
+<script th:inline="javascript">
+    window.APP_LANG = /*[[${session.lang}]]*/ 'vi';
+
+    const rawData = /*[[${bieuDo}]]*/ [];
+    const hasMonth = /*[[${thang != null}]]*/ false;
+
+    const labels = rawData.map(item => {
+        return hasMonth
+            ? ((window.APP_LANG === 'en' ? 'Day ' : 'Ngày ') + item.Nhan)
+            : ((window.APP_LANG === 'en' ? 'Month ' : 'Tháng ') + item.Nhan);
+    });
+
+    const values = rawData.map(item => Number(item.DoanhThu));
+
+    function getCurrencySymbol(curr) {
+        if (curr === 'USD') return '$';
+        if (curr === 'EUR') return '€';
+        return 'đ';
+    }
+
+    function getCurrencyRate(curr) {
+        if (window.EXCHANGE_RATES && window.EXCHANGE_RATES[curr]) {
+            return window.EXCHANGE_RATES[curr];
+        }
+        if (curr === 'USD') return 0.00003937;
+        if (curr === 'EUR') return 0.00003636;
+        return 1.0;
+    }
+
+    const initialCurrency = localStorage.getItem('currency') || (window.APP_LANG === 'en' ? 'USD' : 'VND');
+    const initialRate = getCurrencyRate(initialCurrency);
+    const initialValues = values.map(val => val * initialRate);
+
+    const ctx = document.getElementById('revenueChart');
+    if (ctx) {
+        const myChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        type: 'bar',
+                        label: (window.APP_LANG === 'en' ? 'Revenue Bar Chart' : 'Doanh thu dạng cột') + ' (' + initialCurrency + ')',
+                        data: initialValues,
+                        backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        type: 'line',
+                        label: (window.APP_LANG === 'en' ? 'Revenue Trend' : 'Đường doanh thu') + ' (' + initialCurrency + ')',
+                        data: initialValues,
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        borderWidth: 3,
+                        tension: 0.35,
+                        fill: false,
+                        pointRadius: 5,
+                        pointHoverRadius: 7
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
+                plugins: {
+                    legend: {
+                        display: true
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const value = Number(context.raw || 0);
+                                const curr = localStorage.getItem('currency') || 'VND';
+                                if (curr === 'USD') {
+                                    return context.dataset.label.split(' ')[0] + ': $' + value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                                } else if (curr === 'EUR') {
+                                    return context.dataset.label.split(' ')[0] + ': €' + value.toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                                }
+                                return context.dataset.label.split(' ')[0] + ': ' + value.toLocaleString('vi-VN') + ' đ';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                const curr = localStorage.getItem('currency') || 'VND';
+                                if (curr === 'USD') {
+                                    return '$' + Number(value).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                                } else if (curr === 'EUR') {
+                                    return '€' + Number(value).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                                }
+                                return Number(value).toLocaleString('vi-VN') + ' đ';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        window.addEventListener('currencychange', function(e) {
+            const curr = e.detail.currency;
+            const rate = getCurrencyRate(curr);
+            
+            const convertedValues = values.map(val => val * rate);
+            myChart.data.datasets[0].data = convertedValues;
+            myChart.data.datasets[1].data = convertedValues;
+            
+            const barLabel = window.APP_LANG === 'en' ? 'Revenue Bar Chart' : 'Doanh thu dạng cột';
+            const lineLabel = window.APP_LANG === 'en' ? 'Revenue Trend' : 'Đường doanh thu';
+            
+            myChart.data.datasets[0].label = barLabel + ' (' + curr + ')';
+            myChart.data.datasets[1].label = lineLabel + ' (' + curr + ')';
+            
+            myChart.update();
+        });
+    }
+</script>
+
+<script src="/js/i18n.js?v=20260608"></script>
+</body>
+</html>

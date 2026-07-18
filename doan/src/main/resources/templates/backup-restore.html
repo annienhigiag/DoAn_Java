@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" th:attr="data-lang=${session.lang}">
+<head>
+    <meta charset="UTF-8">
+    <title>Backup/Restore dữ liệu</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/app.css?v=20260531">
+</head>
+<body>
+<div class="global-lang-switch">
+    <a href="/change-language?lang=vi" class="global-lang-btn" th:classappend="${session.lang != 'en'} ? 'active' : ''">VI</a>
+    <a href="/change-language?lang=en" class="global-lang-btn" th:classappend="${session.lang == 'en'} ? 'active' : ''">EN</a>
+</div>
+
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1">Backup/Restore dữ liệu</h2>
+            <p class="text-muted mb-0">Xuất dữ liệu ra file JSON và khôi phục lại khi cần.</p>
+        </div>
+        <a href="/" class="btn btn-outline-secondary rounded-pill px-4">← Về Trang Admin</a>
+    </div>
+
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body p-4">
+                    <div class="display-6 mb-3">⬇️</div>
+                    <h4 class="fw-bold">Backup dữ liệu</h4>
+                    <p class="text-muted">
+                        Tải toàn bộ dữ liệu trong database hiện tại về máy dưới dạng file JSON.
+                    </p>
+                    <a href="/admin/backup-restore/download" class="btn btn-brand rounded-pill px-4">
+                        Tải file backup
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body p-4">
+                    <div class="display-6 mb-3">⬆️</div>
+                    <h4 class="fw-bold">Restore dữ liệu</h4>
+                    <p class="text-muted">
+                        Upload file JSON đã backup trước đó. Dữ liệu hiện tại trong các bảng có trong file sẽ bị thay thế.
+                    </p>
+
+                    <form action="/admin/backup-restore/restore" method="post" enctype="multipart/form-data"
+                          onsubmit="return confirm('Restore sẽ thay thế dữ liệu hiện tại. Bạn chắc chắn muốn tiếp tục?')">
+                        <div class="mb-3">
+                            <input type="file" name="file" accept=".json,application/json" class="form-control" required>
+                        </div>
+                        <button type="submit" class="btn btn-danger rounded-pill px-4">
+                            Khôi phục dữ liệu
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="alert alert-warning mt-4 mb-0">
+        <b>Lưu ý:</b> Trước khi restore, nên tải một file backup mới để phòng trường hợp cần quay lại dữ liệu cũ.
+    </div>
+</div>
+
+<script th:inline="javascript">
+    window.APP_LANG = /*[[${session.lang}]]*/ 'vi';
+</script>
+<script src="/js/i18n.js?v=20260608"></script>
+</body>
+</html>

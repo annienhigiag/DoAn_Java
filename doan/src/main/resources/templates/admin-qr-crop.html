@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="vi" data-lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Cắt ảnh mã QR</title>
+    <link href="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/app.css?v=20260531">
+</head>
+
+<body class="qr-crop-real-page">
+<div class="global-lang-switch">
+    <a href="/change-language?lang=vi" class="global-lang-btn" th:classappend="${session.lang != 'en'} ? 'active' : ''">VI</a>
+    <a href="/change-language?lang=en" class="global-lang-btn" th:classappend="${session.lang == 'en'} ? 'active' : ''">EN</a>
+</div>
+
+
+<section class="qr-crop-full-page">
+    <div class="qr-crop-topbar">
+        <button type="button" class="qr-crop-btn" onclick="cancelCrop()">Hủy</button>
+        <button type="button" class="qr-crop-btn" onclick="finishCrop()">Xong</button>
+    </div>
+
+    <div class="qr-crop-stage">
+        <img id="qrCropImage" alt="Cắt ảnh QR">
+    </div>
+
+    <div class="qr-crop-toolbar">
+        <button type="button" class="qr-crop-tool" onclick="rotateCropper()">
+            <span>↻</span>
+            Xoay
+        </button>
+
+        <button type="button" class="qr-crop-tool" onclick="resetCropper()">
+            <span>⌖</span>
+            Đặt lại
+        </button>
+
+        <button type="button" id="aspectBtn" class="qr-crop-tool active" onclick="toggleAspectRatio()">
+            <span>▣</span>
+            Đổi kích thước
+        </button>
+    </div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.js"></script>
+<script>
+    let cropper = null;
+    let squareMode = true;
+
+    const cropImage = document.getElementById("qrCropImage");
+    const aspectBtn = document.getElementById("aspectBtn");
+
+    function backToQrConfig() {
+        window.location.href = "/admin/qr-thanh-toan";
+    }
+
+    function initCropPage() {
+        const originalImage = sessionStorage.getItem("qrOriginalImage");
+
+        if (!originalImage) {
+            alert("Chưa có ảnh QR để cắt. Vui lòng chọn ảnh lại.");
+            backToQrConfig();
+            return;
+        }
+
+        cropImage.onload = function () {
+            if (cropper) {
+                cropper.destroy();
+            }
+
+            cropper = new Cropper(cropImage, {
+                aspectRatio: 1,
+                viewMode: 1,
+                dragMode: "move",
+                autoCropArea: 0.88,
+                background: false,
+                responsive: true,
+                movable: true,
+                zoomable: true,
+                rotatable: true,
+                scalable: true,
+                cropBoxMovable: true,
+                cropBoxResizable: true,
+                minCropBoxWidth: 120,
+                minCropBoxHeight: 120
+            });
+        };
+
+        cropImage.src = originalImage;
+    }
+
+    function cancelCrop() {
+        sessionStorage.removeItem("qrOriginalImage");
+        sessionStorage.removeItem("qrCroppedImage");
+        backToQrConfig();
+    }
+
+    function finishCrop() {
+        if (!cropper) return;
+
+        const canvasOptions = squareMode
+            ? { width: 800, height: 800, imageSmoothingEnabled: true, imageSmoothingQuality: "high" }
+            : { width: 800, imageSmoothingEnabled: true, imageSmoothingQuality: "high" };
+
+        const canvas = cropper.getCroppedCanvas(canvasOptions);
+        const croppedDataUrl = canvas.toDataURL("image/png", 1);
+
+        sessionStorage.setItem("qrCroppedImage", croppedDataUrl);
+        sessionStorage.removeItem("qrOriginalImage");
+
+        backToQrConfig();
+    }
+
+    function rotateCropper() {
+        if (cropper) cropper.rotate(90);
+    }
+
+    function resetCropper() {
+        if (cropper) cropper.reset();
+    }
+
+    function toggleAspectRatio() {
+        if (!cropper) return;
+
+        squareMode = !squareMode;
+        cropper.setAspectRatio(squareMode ? 1 : NaN);
+
+        if (squareMode) {
+            aspectBtn.classList.add("active");
+        } else {
+            aspectBtn.classList.remove("active");
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", initCropPage);
+</script>
+
+
+<script th:inline="javascript">
+    window.APP_LANG = /*[[${session.lang}]]*/ 'vi';
+</script>
+<script src="/js/i18n.js?v=20260608"></script>
+</body>
+</html>

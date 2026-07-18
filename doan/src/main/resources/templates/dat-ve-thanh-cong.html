@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" th:attr="data-lang=${session.lang}">
+<head>
+    <meta charset="UTF-8">
+    <title>Đặt vé thành công</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/app.css?v=20260531">
+</head>
+<body>
+<div class="global-lang-switch">
+    <a href="/change-language?lang=vi" class="global-lang-btn" th:classappend="${session.lang != 'en'} ? 'active' : ''">VI</a>
+    <a href="/change-language?lang=en" class="global-lang-btn" th:classappend="${session.lang == 'en'} ? 'active' : ''">EN</a>
+</div>
+
+
+<div class="container py-5">
+    <div class="card border-0 shadow rounded-4">
+        <div class="card-body p-5 text-center">
+            <div class="display-4 mb-3">✅</div>
+            <h2 class="text-success fw-bold">Đặt vé thành công!</h2>
+            <p class="text-muted" th:text="${message}"></p>
+
+            <div class="row justify-content-center my-4">
+                <div class="col-md-7">
+                    <table class="table table-bordered">
+                        <tr>
+                            <th>Mã đặt vé</th>
+                            <td th:text="${maDatVe}"></td>
+                        </tr>
+                        <tr>
+                            <th>Nội dung thanh toán</th>
+                            <td class="fw-bold text-primary" th:text="${noiDungThanhToan}"></td>
+                        </tr>
+                        <tr>
+                            <th>Giá gốc</th>
+                            <td>
+                                <span th:text="${#numbers.formatDecimal(giaGoc, 0, 'POINT', 0, 'COMMA')} + ' VNĐ'"></span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Giảm giá</th>
+                            <td>
+                                <span th:text="${#numbers.formatDecimal(tienGiam, 0, 'POINT', 0, 'COMMA')} + ' VNĐ'"></span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Phương thức thanh toán</th>
+                            <td th:text="${phuongThucThanhToan}"></td>
+                        </tr>
+                        <tr>
+                            <th>Trạng thái thanh toán</th>
+                            <td th:text="${trangThaiThanhToan}"></td>
+                        </tr>
+                        <tr>
+                            <th>Tổng tiền</th>
+                            <td class="fw-bold text-primary">
+                                <span th:text="${#numbers.formatDecimal(tongTien, 0, 'POINT', 0, 'COMMA')} + ' VNĐ'"></span>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <div class="row justify-content-center mb-4" th:if="${phuongThucThanhToan == 'Thanh toán qua QR'}">
+                <div class="col-md-5">
+                    <div class="p-4 rounded-4 border bg-light">
+                        <h5 class="fw-bold">Mã QR thanh toán</h5>
+
+                        <img th:src="${qrConfig['AnhQR']}"
+                             alt="QR thanh toán"
+                             style="width:190px;height:190px;object-fit:contain;background:white;border:10px solid white;border-radius:14px;box-shadow:0 5px 20px rgba(0,0,0,.12)">
+
+                        <p class="small text-muted mt-3 mb-0">
+                            Nội dung:
+                            <b th:text="${noiDungThanhToan}"></b>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <a href="/mua-ve" class="btn btn-brand rounded-pill px-4">Tiếp tục mua vé</a>
+            <a href="/lich-su-ve" class="btn btn-outline-secondary rounded-pill px-4">Xem lịch sử vé</a>
+        </div>
+    </div>
+</div>
+
+
+<script th:inline="javascript">
+    window.APP_LANG = /*[[${session.lang}]]*/ 'vi';
+</script>
+<script src="/js/i18n.js?v=20260608"></script>
+</body>
+</html>

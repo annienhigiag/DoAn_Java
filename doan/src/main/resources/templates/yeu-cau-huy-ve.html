@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" th:attr="data-lang=${session.lang}">
+<head>
+    <meta charset="UTF-8">
+    <title>Yêu cầu hủy vé</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/app.css?v=20260531">
+</head>
+<body>
+<div class="global-lang-switch">
+    <a href="/change-language?lang=vi" class="global-lang-btn" th:classappend="${session.lang != 'en'} ? 'active' : ''">VI</a>
+    <a href="/change-language?lang=en" class="global-lang-btn" th:classappend="${session.lang == 'en'} ? 'active' : ''">EN</a>
+</div>
+
+
+<nav class="navbar nav-red px-4">
+    <a class="navbar-brand d-flex align-items-center gap-2 fw-bold text-dark" href="/mua-ve">
+        <span class="logo-pill">🚌</span>
+        Vé Xe Online
+    </a>
+    <a href="/lich-su-ve" class="btn btn-outline-secondary rounded-pill">Quay lại lịch sử</a>
+</nav>
+
+<div class="container py-5">
+    <div class="form-card p-5">
+        <h2 class="fw-bold mb-1">Gửi yêu cầu hủy vé</h2>
+        <p class="text-muted">Yêu cầu sẽ được gửi cho admin xem xét trước khi hủy vé.</p>
+
+        <div class="alert alert-warning rounded-4">
+            Mã vé: <b th:text="${ve['MaDatVe']}"></b> |
+            Tổng tiền: <b th:text="${#numbers.formatDecimal(ve['TongTien'], 0, 'POINT', 0, 'COMMA')} + 'đ'"></b> |
+            Trạng thái: <b th:text="${ve['TrangThai']}"></b>
+        </div>
+
+        <form method="post" action="/yeu-cau-huy-ve">
+            <input type="hidden" name="maDatVe" th:value="${ve['MaDatVe']}">
+
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Lý do hủy vé</label>
+                <textarea name="lyDo" rows="5" class="form-control rounded-4" required
+                          placeholder="Nhập lý do hủy vé để admin xem xét..."></textarea>
+            </div>
+
+            <button class="btn btn-danger rounded-pill px-5">Gửi yêu cầu hủy</button>
+            <a href="/lich-su-ve" class="btn btn-outline-secondary rounded-pill">Quay lại</a>
+        </form>
+    </div>
+</div>
+
+
+<script th:inline="javascript">
+    window.APP_LANG = /*[[${session.lang}]]*/ 'vi';
+</script>
+<script src="/js/i18n.js?v=20260608"></script>
+</body>
+</html>

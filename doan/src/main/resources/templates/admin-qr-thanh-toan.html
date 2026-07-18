@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" th:attr="data-lang=${session.lang}">
+<head>
+    <meta charset="UTF-8">
+    <title>Cấu hình QR thanh toán</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/app.css?v=20260531">
+    <style>
+        .qr-config-card{border:0;border-radius:24px;box-shadow:0 12px 35px rgba(15,23,42,.12)}
+        .qr-preview{width:230px;height:230px;object-fit:contain;background:#fff;border:12px solid #fff;border-radius:20px;box-shadow:0 8px 25px rgba(0,0,0,.14)}
+        .upload-box{border:2px dashed #9cc7ff;background:#f7fbff;border-radius:20px;padding:22px;text-align:center}
+        .top-user{display:flex;align-items:center;gap:10px}
+    </style>
+</head>
+<body>
+<div class="global-lang-switch">
+    <a href="/change-language?lang=vi" class="global-lang-btn" th:classappend="${session.lang != 'en'} ? 'active' : ''">VI</a>
+    <a href="/change-language?lang=en" class="global-lang-btn" th:classappend="${session.lang == 'en'} ? 'active' : ''">EN</a>
+</div>
+
+
+<nav class="navbar nav-red px-4">
+    <a class="navbar-brand d-flex align-items-center gap-2 fw-bold text-dark" href="/">
+        <span class="logo-pill">🚌</span>
+        Admin Panel
+    </a>
+    <div class="ms-auto top-user">
+        <b th:text="${username != null ? username : 'Admin'}"></b>
+        <a href="/" class="btn btn-outline-secondary rounded-pill ms-2">Trang chủ</a>
+        <a href="/logout" class="btn btn-outline-danger rounded-pill">Đăng xuất</a>
+    </div>
+</nav>
+
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1">Cấu hình QR thanh toán</h2>
+            <p class="text-muted mb-0">Cập nhật ảnh QR, ngân hàng, số tài khoản và chủ tài khoản.</p>
+        </div>
+        <a href="/" class="btn btn-outline-secondary rounded-pill px-4">Quay lại</a>
+    </div>
+
+    <div class="alert alert-success rounded-4" th:if="${param.success != null}">
+        Cập nhật cấu hình QR thành công.
+    </div>
+
+    <form method="post" action="/admin/qr-thanh-toan" enctype="multipart/form-data">
+        <div class="row g-4">
+            <div class="col-lg-5">
+                <div class="card qr-config-card h-100">
+                    <div class="card-body p-4 text-center">
+                        <h5 class="fw-bold mb-3">Ảnh QR hiện tại</h5>
+                        <img id="qrPreview" class="qr-preview mb-3"
+                             th:src="${qr != null and qr['AnhQR'] != null ? qr['AnhQR'] : '/images/default-qr.png'}"
+                             alt="QR thanh toán">
+
+                        <div class="upload-box mt-3">
+                            <label class="form-label fw-semibold">Chọn ảnh QR mới</label>
+                            <input id="anhQR" type="file" name="anhQR" class="form-control rounded-3" accept="image/*">
+                            <div class="small text-muted mt-2">
+                                Có thể chọn ảnh rồi bấm <b>Cắt ảnh QR</b> để căn lại ảnh trước khi lưu.
+                            </div>
+                            <button type="button" id="cropBtn" class="btn btn-outline-primary rounded-pill mt-3" disabled>
+                                Cắt ảnh QR
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-7">
+                <div class="card qr-config-card h-100">
+                    <div class="card-body p-4">
+                        <h5 class="fw-bold mb-4">Thông tin tài khoản nhận tiền</h5>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Tên ngân hàng</label>
+                            <input class="form-control form-control-lg rounded-3" name="tenNganHang" required
+                                   th:value="${qr != null and qr['TenNganHang'] != null ? qr['TenNganHang'] : ''}"
+                                   placeholder="Ví dụ: Vietcombank">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Số tài khoản</label>
+                            <input class="form-control form-control-lg rounded-3" name="soTaiKhoan" required
+                                   th:value="${qr != null and qr['SoTaiKhoan'] != null ? qr['SoTaiKhoan'] : ''}"
+                                   placeholder="Nhập số tài khoản nhận tiền">
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Chủ tài khoản</label>
+                            <input class="form-control form-control-lg rounded-3" name="chuTaiKhoan" required
+                                   th:value="${qr != null and qr['ChuTaiKhoan'] != null ? qr['ChuTaiKhoan'] : ''}"
+                                   placeholder="Nhập tên chủ tài khoản">
+                        </div>
+
+                        <button class="btn btn-brand btn-lg rounded-pill px-5">Lưu cấu hình</button>
+                        <a href="/" class="btn btn-outline-secondary btn-lg rounded-pill">Hủy</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+    const input = document.getElementById("anhQR");
+    const preview = document.getElementById("qrPreview");
+    const cropBtn = document.getElementById("cropBtn");
+
+    function dataUrlToFile(dataUrl, fileName) {
+        const arr = dataUrl.split(",");
+        const mime = arr[0].match(/:(.*?);/)[1];
+        const binary = atob(arr[1]);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+        return new File([bytes], fileName, { type: mime });
+    }
+
+    function setInputFileFromDataUrl(dataUrl) {
+        const file = dataUrlToFile(dataUrl, "qr-cropped.png");
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(file);
+        input.files = dataTransfer.files;
+        preview.src = dataUrl;
+        cropBtn.disabled = false;
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const croppedImage = sessionStorage.getItem("qrCroppedImage");
+        if (croppedImage) {
+            setInputFileFromDataUrl(croppedImage);
+            sessionStorage.removeItem("qrCroppedImage");
+        }
+    });
+
+    input.addEventListener("change", function () {
+        const file = input.files && input.files[0];
+        if (!file) {
+            cropBtn.disabled = true;
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            preview.src = e.target.result;
+            sessionStorage.setItem("qrOriginalImage", e.target.result);
+            cropBtn.disabled = false;
+        };
+        reader.readAsDataURL(file);
+    });
+
+    cropBtn.addEventListener("click", function () {
+        if (!sessionStorage.getItem("qrOriginalImage") && preview.src) {
+            sessionStorage.setItem("qrOriginalImage", preview.src);
+        }
+        window.location.href = "/admin/qr-crop";
+    });
+</script>
+
+
+<script th:inline="javascript">
+    window.APP_LANG = /*[[${session.lang}]]*/ 'vi';
+</script>
+<script src="/js/i18n.js?v=20260608"></script>
+</body>
+</html>

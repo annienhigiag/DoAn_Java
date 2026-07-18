@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" th:attr="data-lang=${session.lang}">
+<head>
+    <meta charset="UTF-8">
+    <title>Nhân viên - Quản lý bán vé</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/app.css?v=20260531">
+    <style>
+        .top-user{display:flex;align-items:center;gap:10px}
+        .top-user img{width:42px;height:42px;border-radius:50%;object-fit:cover;border:2px solid #7db7ff}
+        .staff-card{border:0;border-radius:22px;box-shadow:0 10px 30px rgba(15,23,42,.08);height:100%}
+        .staff-icon{width:48px;height:48px;border-radius:16px;background:#eaf4ff;color:#4f9af5;display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:14px}
+    </style>
+</head>
+<body style="background:#f6f7fb;">
+<div class="global-lang-switch">
+    <a href="/change-language?lang=vi" class="global-lang-btn" th:classappend="${session.lang != 'en'} ? 'active' : ''">VI</a>
+    <a href="/change-language?lang=en" class="global-lang-btn" th:classappend="${session.lang == 'en'} ? 'active' : ''">EN</a>
+</div>
+
+
+<nav class="navbar nav-red px-4">
+    <a class="navbar-brand d-flex align-items-center gap-2 fw-bold text-dark" href="/nhan-vien-dashboard">
+        <span class="logo-pill">🧑‍💼</span>
+        Nhân viên bán vé
+    </a>
+
+    <div class="ms-auto top-user">
+        <img th:src="${avatarHienThi}">
+        <b th:text="${hoTenHienThi}"></b>
+        <a href="/nhan-vien-thong-tin" class="btn btn-outline-secondary rounded-pill ms-2">Sửa thông tin</a>
+        <a href="/logout" class="btn btn-outline-danger rounded-pill">Đăng xuất</a>
+    </div>
+</nav>
+
+<div class="container py-4">
+    <div class="hero-booking rounded-4 p-5 mb-4">
+        <h1 class="fw-bold mb-2">Bảng điều khiển nhân viên</h1>
+        <p class="mb-0">Hỗ trợ đặt vé, thanh toán, sửa vé và tra cứu thông tin khách hàng.</p>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4 mb-4"><div class="card staff-card"><div class="card-body p-4"><div class="staff-icon">🧾</div><h5 class="fw-bold">Quản lý đặt vé</h5><p class="text-muted">Tạo, xem và cập nhật vé.</p><a href="/dat-ve" class="btn btn-brand rounded-pill">Truy cập</a></div></div></div>
+        <div class="col-md-4 mb-4"><div class="card staff-card"><div class="card-body p-4"><div class="staff-icon">💳</div><h5 class="fw-bold">Thanh toán</h5><p class="text-muted">Xác nhận thanh toán.</p><a href="/thanh-toan" class="btn btn-brand rounded-pill">Truy cập</a></div></div></div>
+        <div class="col-md-4 mb-4"><div class="card staff-card"><div class="card-body p-4"><div class="staff-icon">👥</div><h5 class="fw-bold">Khách hàng</h5><p class="text-muted">Tra cứu khách hàng.</p><a href="/khach-hang" class="btn btn-brand rounded-pill">Truy cập</a></div></div></div>
+        <div class="col-md-4 mb-4"><div class="card staff-card"><div class="card-body p-4"><div class="staff-icon">🕒</div><h5 class="fw-bold">Lịch chạy</h5><p class="text-muted">Xem lịch xe chạy.</p><a href="/lich-chay" class="btn btn-brand rounded-pill">Truy cập</a></div></div></div>
+        <div class="col-md-4 mb-4"><div class="card staff-card"><div class="card-body p-4"><div class="staff-icon">❌</div><h5 class="fw-bold">Vé hủy</h5><p class="text-muted">Theo dõi vé đã hủy.</p><a href="/huy-ve" class="btn btn-brand rounded-pill">Truy cập</a></div></div></div>
+        <div class="col-md-4 mb-4"><div class="card staff-card"><div class="card-body p-4"><div class="staff-icon">🔁</div><h5 class="fw-bold">Sửa vé</h5><p class="text-muted">Hỗ trợ đổi vé.</p><a href="/sua-ve" class="btn btn-brand rounded-pill">Truy cập</a></div></div></div>
+    </div>
+</div>
+
+
+<script th:inline="javascript">
+    window.APP_LANG = /*[[${session.lang}]]*/ 'vi';
+</script>
+<script src="/js/i18n.js?v=20260608"></script>
+</body>
+</html>

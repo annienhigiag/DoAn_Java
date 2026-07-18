@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" th:attr="data-lang=${session.lang}">
+<head>
+    <meta charset="UTF-8">
+    <title>Ưu đãi của tôi</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/app.css?v=20260531">
+    <style>
+        .profile-layout{display:grid;grid-template-columns:270px 1fr;gap:30px;min-height:100vh;padding:24px;background:#f3f8ff}
+        .profile-sidebar,.profile-card{background:white;border-radius:26px;padding:24px;box-shadow:0 10px 30px rgba(15,23,42,.08)}
+        .profile-avatar{width:62px;height:62px;border-radius:50%;object-fit:cover;border:3px solid #7db7ff}
+        .wallet-badge{background:#7fffd4;color:#111;padding:2px 8px;border-radius:4px;font-size:13px}
+        .profile-menu a{display:flex;align-items:center;gap:12px;padding:16px;border-bottom:1px solid #e5e7eb;color:#4b5563;text-decoration:none;font-weight:600}
+        .profile-menu a.active,.profile-menu a:hover{background:#eaf4ff;border-radius:14px;color:#4f9af5}
+        .coupon-card{border:2px dashed #7db7ff;border-radius:20px;padding:20px;background:#f8fbff}
+    </style>
+</head>
+<body>
+<div class="global-lang-switch">
+    <a href="/change-language?lang=vi" class="global-lang-btn" th:classappend="${session.lang != 'en'} ? 'active' : ''">VI</a>
+    <a href="/change-language?lang=en" class="global-lang-btn" th:classappend="${session.lang == 'en'} ? 'active' : ''">EN</a>
+</div>
+
+
+<div class="profile-layout">
+    <aside class="profile-sidebar">
+        <div class="d-flex align-items-center gap-3 mb-4">
+            <img class="profile-avatar" th:src="${avatarHienThi}">
+            <div>
+                <h5 class="fw-bold mb-1" th:text="${hoTenHienThi}"></h5>
+                <span class="wallet-badge">Wallet Not Verified</span>
+            </div>
+        </div>
+
+        <div class="profile-menu">
+            <a class="active" href="/uu-dai-cua-toi">🎟️ Ưu đãi của tôi</a>
+            <a href="/lich-su-ve">🏷️ Chuyến đi của tôi</a>
+            <a href="/vi-the">💳 Ví/Thẻ</a>
+            <a href="/trang-ca-nhan">⚙️ Thông tin của tôi</a>
+            <a href="/mua-ve">🚌 Mua vé</a>
+        </div>
+    </aside>
+
+    <main>
+        <h3 class="mb-4">Ưu đãi của tôi</h3>
+
+        <div class="alert alert-success rounded-4" th:if="${param.saved}">
+            Đã lưu mã ưu đãi vào tài khoản của bạn.
+        </div>
+
+        <div class="profile-card mb-4">
+            <h5 class="fw-bold">Mã ưu đãi đã lưu</h5>
+
+            <div class="alert alert-warning rounded-4 mt-3" th:if="${#lists.isEmpty(myOffers)}">
+                Chưa có ưu đãi.
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3" th:each="u : ${myOffers}">
+                    <div class="coupon-card">
+                        <h5 class="fw-bold text-primary" th:text="${u['MaKM']}"></h5>
+                        <p class="mb-1" th:text="${u['TenChuongTrinh']}"></p>
+                        <b th:text="'Giảm ' + ${u['TyLeGiam']} + '%'"></b>
+                        <p class="text-muted mb-0" th:text="${u['MoTa']}"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="profile-card">
+            <h5 class="fw-bold">Gợi ý mã ưu đãi từ hệ thống</h5>
+
+            <div class="row mt-3">
+                <div class="col-md-6 mb-3" th:each="km : ${suggestions}">
+                    <div class="coupon-card">
+                        <h5 class="fw-bold text-primary" th:text="${km['MaKM']}"></h5>
+                        <p class="mb-1" th:text="${km['TenChuongTrinh']}"></p>
+                        <b th:text="'Giảm ' + ${km['TyLeGiam']} + '%'"></b>
+                        <p class="text-muted" th:text="${km['MoTa']}"></p>
+
+                        <form method="post" action="/uu-dai-cua-toi/luu">
+                            <input type="hidden" name="maKM" th:value="${km['MaKM']}">
+                            <button class="btn btn-brand rounded-pill">Lưu mã này</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert alert-info rounded-4" th:if="${#lists.isEmpty(suggestions)}">
+                Hiện không có mã ưu đãi mới để gợi ý.
+            </div>
+        </div>
+    </main>
+</div>
+
+
+<script th:inline="javascript">
+    window.APP_LANG = /*[[${session.lang}]]*/ 'vi';
+</script>
+<script src="/js/i18n.js?v=20260608"></script>
+</body>
+</html>
